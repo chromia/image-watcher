@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
@@ -15,6 +16,7 @@ namespace ImageWatcher
 		public MainWindow()
 		{
 			InitializeComponent();
+			ProcessArguments();
 		}
 
 		private void StartWatching(string filePath)
@@ -90,6 +92,38 @@ namespace ImageWatcher
 			}
 		}
 
+		private void ProcessArguments()
+		{
+			string[] args = Environment.GetCommandLineArgs();
+			List<string> options = new List<string>();
+			string filePath = null;
+			for (int i = 1; i < args.Length; i++)
+			{
+				string arg = args[i];
+				if (arg.StartsWith("--"))
+				{
+					options.Add(arg);
+				}
+				else
+				{
+					filePath = arg;
+				}
+			}
+
+			if (filePath != null)
+			{
+				LoadImage(filePath);
+			}
+
+			foreach (string arg in args)
+			{
+				if (arg == "--fit-auto")
+				{
+					SetFitMode_Auto();
+				}
+			}
+		}
+
 		private void ImageDrop(object sender, System.Windows.DragEventArgs e)
 		{
 			if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
@@ -118,22 +152,37 @@ namespace ImageWatcher
 			}
 		}
 
+		private void SetFitMode_Manual()
+		{
+			ImageBox.Stretch = System.Windows.Media.Stretch.Uniform;
+			FitButton.Content = "\ue98a";
+			SizeToContent = SizeToContent.Manual;
+		}
+
+		private void SetFitMode_Auto()
+		{
+			ImageBox.Stretch = System.Windows.Media.Stretch.None;
+			FitButton.Content = "\ue989";
+			SizeToContent = SizeToContent.WidthAndHeight;
+		}
+
+		private bool IsFitMode_Auto()
+		{
+			return ImageBox.Stretch == System.Windows.Media.Stretch.None;
+		}
+
 		private void FitButtonClick(object sender, RoutedEventArgs e)
 		{
 			if (ImageBox.Source == null)
 				return;
 
-			if (ImageBox.Stretch == System.Windows.Media.Stretch.None)
+			if (IsFitMode_Auto())
 			{
-				ImageBox.Stretch = System.Windows.Media.Stretch.Uniform;
-				FitButton.Content = "\ue98a";
-				SizeToContent = SizeToContent.Manual;
+				SetFitMode_Manual();
 			}
 			else
 			{
-				ImageBox.Stretch = System.Windows.Media.Stretch.None;
-				FitButton.Content = "\ue989";
-				SizeToContent = SizeToContent.WidthAndHeight;
+				SetFitMode_Auto();
 			}
 		}
 
